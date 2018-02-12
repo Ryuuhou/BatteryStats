@@ -101,7 +101,8 @@ Run:
 		if (LastACStatus = 0)
 		{
 			LastACStatus := 1
-			FileAppend, Discharge %HighestBatteryPercent%`% to %LastBatteryPercent%`% in %OnBatteryTime%`n, Log.txt
+			t := GetFormattedTime(OnBatteryTime)
+			FileAppend, Discharge %HighestBatteryPercent%`% to %LastBatteryPercent%`% in %t%`n, Log.txt
 			IniWrite,%LastACStatus%,config.ini,Variables,LastACStatus
 			HighestBatteryPercent := batteryLifePercent
 			IniWrite,%HighestBatteryPercent%,config.ini,Variables,HighestBatteryPercent
@@ -135,7 +136,7 @@ if (acLineStatus = 0)
 }
 else	
 {
-	Text = %Text%(AC)
+	Text = %Text% (AC)
 }
 TrayTip, Battery Stats, %Text%,,16
 return
