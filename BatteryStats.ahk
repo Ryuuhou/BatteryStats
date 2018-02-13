@@ -20,6 +20,7 @@ global SessionDischargePercent
 global IconPath
 global IconPercentage
 global CurrentIcon
+global Text
 
 IconPercentage := Array(item)
 IconPercentage[0] := 15
@@ -125,6 +126,7 @@ Run:
 			gosub LogDischarge
 		}
 	}
+	gosub TrayToolTip
 	gosub SetTrayIcon
 	return
 }
@@ -194,7 +196,12 @@ ResetAll:
 
 TrayTip:
 {
-	GetSystemPowerStatus()
+	TrayTip, Battery Stats, %Text%,,16
+	return
+}
+
+TrayToolTip:
+{
 	Text = Current Battery : %batteryLifePercent%`%
 	if (acLineStatus = 0)
 	{
@@ -204,11 +211,11 @@ TrayTip:
 		if OnBatteryTime > 600000
 		{
 			t := FloorDecimal((SessionDischargePercent)/(OnBatteryTime/3600000))
-			Text = %Text%`nAverage Discharge Rate : %t% (`%/h) 
+			Text = %Text%`nAverage Discharge : %t% (`%/h) 
 		}
 		else
 		{
-			Text = %Text%`nAverage Discharge Rate : -.-- (`%/h)
+			Text = %Text%`nAverage Discharge : -.-- (`%/h)
 		}
 		t := GetFormattedTime(batteryLifePercent/(SessionDischargePercent*-1/OnBatteryTime))
 		Text = %Text%`nEstimated Time Remaining : %t%
@@ -217,7 +224,7 @@ TrayTip:
 	{
 		Text = %Text% (AC)
 	}
-	TrayTip, Battery Stats, %Text%,,16
+	Menu, Tray, Tip, %Text%
 	return
 }
 

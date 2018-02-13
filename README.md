@@ -11,7 +11,7 @@ README 02/12/18
 Running from source
 * AHK (http://ahkscript.org/ or https://autohotkey.com/)
 
-Running from .exe releases
+Running from .zip releases (zip includes .exe and required icon files)
 * None
 
 THIS SCRIPT IS ONLY TESTED AND MAINTAINED ON WIN10. I may be unable to help you on any other version.
