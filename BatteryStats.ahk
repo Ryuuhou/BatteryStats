@@ -30,7 +30,7 @@ CurrentIcon := -1
 
 ;END
 
-IniRead, OnBatteryTime, config.ini, Variables, OnBatteryTime, -1
+IniRead, OnBatteryTime, config.ini, Variables, OnBatteryTime, 0
 IniRead, LastBatteryPercent, config.ini, Variables, LastBatteryPercent, -1
 IniRead, HighestBatteryPercent, config.ini, Variables, HighestBatteryPercent, -1
 IniRead, LowestBatteryPercent, config.ini, Variables, LowestBatteryPercent, -1
@@ -138,14 +138,14 @@ AddOnBatteryTime:
 
 LogCharge:
 {
-	FileAppend, Charge %LowestBatteryPercent%`% to %HighestBatteryPercent%`%`n, Log.txt
+	FileAppend, Charge %LowestBatteryPercent%`% to %batteryLifePercent%`%`n, Log.txt
 	return
 }
 
 LogDischarge:
 {
 	t := GetFormattedTime(OnBatteryTime)
-	FileAppend, Discharge %HighestBatteryPercent%`% to %LastBatteryPercent%`% in %t%`n, Log.txt
+	FileAppend, Discharge %HighestBatteryPercent%`% to %batteryLifePercent%`% in %t%`n, Log.txt
 	return
 }
 
@@ -210,7 +210,7 @@ TrayTip:
 		{
 			Text = %Text%`nAverage Discharge Rate : -.-- (`%/h)
 		}
-		t := GetFormattedTime(batteryLifeTime*1000)
+		t := GetFormattedTime(batteryLifePercent/(SessionDischargePercent*-1/OnBatteryTime))
 		Text = %Text%`nEstimated Time Remaining : %t%
 	}
 	else	
