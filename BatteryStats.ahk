@@ -24,7 +24,7 @@ IniRead, OnBatteryTime, config.ini, Variables, OnBatteryTime, -1
 IniRead, LastBatteryPercent, config.ini, Variables, LastBatteryPercent, -1
 IniRead, HighestBatteryPercent, config.ini, Variables, HighestBatteryPercent, -1
 IniRead, LowestBatteryPercent, config.ini, Variables, LowestBatteryPercent, -1
-IniRead, SessionDischargePercent, config.ini, Variables, SessionDischargePercent, 0
+IniRead, SessionDischargePercent, config.ini, Variables, SessionDischargePercent, 1
 
 GetSystemPowerStatus()
 
@@ -46,7 +46,12 @@ if (LastBatteryPercent = -1)
 	gosub ResetLast
 }
 
-if (batteryLifePercent >= BatteryPercentResetThreshold)
+if (SessionDischargePercent = 1)
+{
+	gosub ResetSessionDischarge
+}
+
+if (batteryLifePercent >= BatteryPercentResetThreshold and batteryLifePercent > LastBatteryPercent)
 {
 	gosub LogCharge
 	gosub ResetAll
@@ -57,6 +62,7 @@ Menu, Tray, Add, Show Log, OpenLog
 Menu, Tray, Add, Show Statistics, TrayTip 
 Menu, Tray, Default, Show Statistics
 Menu, Tray, Click, 1
+Menu, Tray, Add, Exit, Exit
 
 ;acLineStatus
 ;batteryLifePercent
@@ -75,7 +81,8 @@ Run:
 	{
 		if (LastBatteryPercent > batteryLifePercent)
 		{
-			SessionDischargePercent := SessionDischargePercent - (batteryLifePercent-LastBatteryPercent)
+			SessionDischargePercent := SessionDischargePercent - (LastBatteryPercent-batteryLifePercent)
+			IniWrite,%SessionDischargePercent%,config.ini,Variables,SessionDischargePercent
 			gosub ResetLowest
 		}
 		else if (batteryLifePercent > BatteryPercentResetThreshold)
@@ -114,6 +121,7 @@ AddOnBatteryTime:
 {
 	OnBatteryTime := OnBatteryTime + RunPeriod
 	IniWrite,%OnBatteryTime%,config.ini,Variables,OnBatteryTime
+	return
 }
 
 LogCharge:
@@ -138,28 +146,37 @@ ResetLast:
 
 ResetHighest:
 {
-	HighestBatteryPercent = batteryLifePercent
+	HighestBatteryPercent := batteryLifePercent
 	IniWrite,%HighestBatteryPercent%,config.ini,Variables,HighestBatteryPercent
 	return
 }
 
 ResetLowest:
 {
-	LowestBatteryPercent = batteryLifePercent
+	LowestBatteryPercent := batteryLifePercent
 	IniWrite,%LowestBatteryPercent%,config.ini,Variables,LowestBatteryPercent
+	return
+}
+
+ResetSessionDischarge:
+{
+	SessionDischargePercent := 0
+	IniWrite,%SessionDischargePercent%,config.ini,Variables,SessionDischargePercent
 	return
 }
 
 ResetAll:
 {
-	HighestBatteryPercent = batteryLifePercent
-	LowestBatteryPercent = batteryLifePercent
-	LastBatteryPercent = batteryLifePercent
+	HighestBatteryPercent := batteryLifePercent
+	LowestBatteryPercent := batteryLifePercent
+	LastBatteryPercent := batteryLifePercent
+	OnBatteryTime := 0
+	SessionDischargePercent := 0
 	IniWrite,%HighestBatteryPercent%,config.ini,Variables,HighestBatteryPercent
 	IniWrite,%LowestBatteryPercent%,config.ini,Variables,LowestBatteryPercent
 	IniWrite,%LastBatteryPercent%,config.ini,Variables,LastBatteryPercent
-	OnBatteryTime := 0
-	SessionDischargePercent := 0
+	IniWrite,%OnBatteryTime%,config.ini,Variables,OnBatteryTime
+	IniWrite,%SessionDischargePercentt%,config.ini,Variables,SessionDischargePercent
 	return
 }
 
@@ -168,7 +185,7 @@ GetSystemPowerStatus()
 Text = Current Battery : %batteryLifePercent%`%
 if (acLineStatus = 0)
 {
-	Text = %Text%`nDischarge Amount : %SessionDischargePercent%`%
+	Text = %Text% (%SessionDischargePercent%`%)
 	t := GetFormattedTime(OnBatteryTime)
 	Text = %Text%`nDischarge Time : %t%	
 	if OnBatteryTime > 600000
@@ -194,6 +211,12 @@ OpenLog:
 	Run Edit %A_ScriptDir%\Log.txt
 	return
 
+Exit:
+{
+	ExitApp
+	return	
+}
+	
 #Include %A_ScriptDir%/Functions/SystemPowerStatus.ahk
 #Include %A_ScriptDir%/Functions/FormattedTime.ahk
 #Include %A_ScriptDir%/Functions/GetInteger.ahk
