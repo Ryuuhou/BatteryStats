@@ -240,17 +240,17 @@ SetTrayIcon:
 		Menu, Tray, Icon, %A_ScriptDir%/Icons/empty.ico,,1
 		CurrentIcon := 0
 	}
-	else if (batteryLifePercent <= IconPercentage[1] and CurrentIcon != 1) ;LESS THAN 30
+	else if (batteryLifePercent > IconPercentage[0] and batteryLifePercent <= IconPercentage[1] and CurrentIcon != 1) ;LESS THAN 30
 	{
 		Menu, Tray, Icon, %A_ScriptDir%/Icons/low.ico,,1
 		CurrentIcon := 1
 	}
-	else if (batteryLifePercent <= IconPercentage[2] and CurrentIcon != 2) ;LESS THAN 60
+	else if (batteryLifePercent > IconPercentage[1] and batteryLifePercent <= IconPercentage[2] and CurrentIcon != 2) ;LESS THAN 60
 	{
 		Menu, Tray, Icon, %A_ScriptDir%/Icons/half.ico,,1
 		CurrentIcon := 2
 	}
-	else if (batteryLifePercent < IconPercentage[3] and CurrentIcon != 3) ;LESS THAN 90
+	else if (batteryLifePercent > IconPercentage[2] and batteryLifePercent < IconPercentage[3] and CurrentIcon != 3) ;LESS THAN 90
 	{
 		Menu, Tray, Icon, %A_ScriptDir%/Icons/almost_full.ico,,1
 		CurrentIcon := 3
