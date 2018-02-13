@@ -17,6 +17,16 @@ global LastACStatus
 global HighestBatteryPercent
 global LowestBatteryPercent
 global SessionDischargePercent
+global IconPath
+global IconPercentage
+global CurrentIcon
+
+IconPercentage := Array(item)
+IconPercentage[0] := 15
+IconPercentage[1] := 30
+IconPercentage[2] := 60
+IconPercentage[3] := 90
+CurrentIcon := -1
 
 ;END
 
@@ -28,6 +38,7 @@ IniRead, SessionDischargePercent, config.ini, Variables, SessionDischargePercent
 
 GetSystemPowerStatus()
 
+gosub SetTrayIcon
 LastACStatus := acLineStatus
 IniWrite,%LastACStatus%,config.ini,Variables,LastACStatus
 
@@ -114,6 +125,7 @@ Run:
 			gosub LogDischarge
 		}
 	}
+	gosub SetTrayIcon
 	return
 }
 
@@ -181,35 +193,74 @@ ResetAll:
 }
 
 TrayTip:
-GetSystemPowerStatus()
-Text = Current Battery : %batteryLifePercent%`%
-if (acLineStatus = 0)
 {
-	Text = %Text% (%SessionDischargePercent%`%)
-	t := GetFormattedTime(OnBatteryTime)
-	Text = %Text%`nDischarge Time : %t%	
-	if OnBatteryTime > 600000
+	GetSystemPowerStatus()
+	Text = Current Battery : %batteryLifePercent%`%
+	if (acLineStatus = 0)
 	{
-		t := FloorDecimal((SessionDischargePercent)/(OnBatteryTime/3600000))
-		Text = %Text%`nAverage Discharge Rate : %t% (`%/h) 
+		Text = %Text% (%SessionDischargePercent%`%)
+		t := GetFormattedTime(OnBatteryTime)
+		Text = %Text%`nDischarge Time : %t%	
+		if OnBatteryTime > 600000
+		{
+			t := FloorDecimal((SessionDischargePercent)/(OnBatteryTime/3600000))
+			Text = %Text%`nAverage Discharge Rate : %t% (`%/h) 
+		}
+		else
+		{
+			Text = %Text%`nAverage Discharge Rate : -.-- (`%/h)
+		}
+		t := GetFormattedTime(batteryLifeTime*1000)
+		Text = %Text%`nEstimated Time Remaining : %t%
 	}
-	else
+	else	
 	{
-		Text = %Text%`nAverage Discharge Rate : -.-- (`%/h)
+		Text = %Text% (AC)
 	}
-	t := GetFormattedTime(batteryLifeTime*1000)
-	Text = %Text%`nEstimated Time Remaining : %t%
+	TrayTip, Battery Stats, %Text%,,16
+	return
 }
-else	
+
+SetTrayIcon:
 {
-	Text = %Text% (AC)
+	if (acLineStatus = 1)
+	{
+		Menu, Tray, Icon, %A_ScriptDir%/Icons/charging.ico,,1
+		CurrentIcon := 5
+	}
+	else if (batteryLifePercent <= IconPercentage[0] and CurrentIcon != 0) ;LESS THAN 15
+	{
+		Menu, Tray, Icon, %A_ScriptDir%/Icons/empty.ico,,1
+		CurrentIcon := 0
+	}
+	else if (batteryLifePercent <= IconPercentage[1] and CurrentIcon != 1) ;LESS THAN 30
+	{
+		Menu, Tray, Icon, %A_ScriptDir%/Icons/low.ico,,1
+		CurrentIcon := 1
+	}
+	else if (batteryLifePercent <= IconPercentage[2] and CurrentIcon != 2) ;LESS THAN 60
+	{
+		Menu, Tray, Icon, %A_ScriptDir%/Icons/half.ico,,1
+		CurrentIcon := 2
+	}
+	else if (batteryLifePercent < IconPercentage[3] and CurrentIcon != 3) ;LESS THAN 90
+	{
+		Menu, Tray, Icon, %A_ScriptDir%/Icons/almost_full.ico,,1
+		CurrentIcon := 3
+	}
+	else if (batteryLifePercent >= IconPercentage[3] and CurrentIcon != 4) ;GREATER THAN 90
+	{
+		Menu, Tray, Icon, %A_ScriptDir%/Icons/full.ico,,1
+		CurrentIcon := 4
+	}	
+	return
 }
-TrayTip, Battery Stats, %Text%,,16
-return
 
 OpenLog:
+{
 	Run Edit %A_ScriptDir%\Log.txt
 	return
+}
 
 Exit:
 {
