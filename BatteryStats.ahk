@@ -76,11 +76,6 @@ Menu, Tray, Default, Show Statistics
 Menu, Tray, Click, 1
 Menu, Tray, Add, Exit, Exit
 
-;acLineStatus
-;batteryLifePercent
-;batteryLifeTime
-;batteryFullLifeTime
-
 SetTimer, Run, %RunPeriod%
 
 return
@@ -88,33 +83,34 @@ return
 
 Run:
 {
-	GetSystemPowerStatus()
-	if (LastBatteryPercent != batteryLifePercent)
-	{
-		if (LastBatteryPercent > batteryLifePercent)
-		{
-			SessionDischargePercent := SessionDischargePercent - (LastBatteryPercent-batteryLifePercent)
-			IniWrite,%SessionDischargePercent%,config.ini,Variables,SessionDischargePercent
-			gosub ResetLowest
-		}
-		else if (batteryLifePercent > BatteryPercentResetThreshold)
-		{
-			gosub ResetAll		
-		}
-		else if (HighestBatteryPercent < batteryLifePercent and acLineStatus = 1)
-		{
-			gosub ResetHighest
-		}
-		gosub ResetLast
-	}
+	GetSystemPowerStatus()	
 	if (acLineStatus = 0)
 	{
-		gosub AddOnBatteryTime
 		if (LastACStatus = 1)
 		{
 			LastACStatus := 0
 			IniWrite,%LastACStatus%,config.ini,Variables,LastACStatus
 			gosub LogCharge
+		}
+		
+		gosub AddOnBatteryTime
+		
+		if (LastBatteryPercent != batteryLifePercent)
+		{		
+			if (LastBatteryPercent > batteryLifePercent)
+			{
+				SessionDischargePercent := SessionDischargePercent - (LastBatteryPercent-batteryLifePercent)
+				IniWrite,%SessionDischargePercent%,config.ini,Variables,SessionDischargePercent
+				gosub ResetLowest
+			}
+			else
+			{
+				gosub LogCharge
+				if batteryLifePercent > BatteryPercentResetThreshold
+				{
+					gosub ResetAll
+				}
+			}
 		}
 	}
 	else if (acLineStatus = 1)
@@ -125,7 +121,14 @@ Run:
 			IniWrite,%LastACStatus%,config.ini,Variables,LastACStatus
 			gosub LogDischarge
 		}
+		
+		if (HighestBatteryPercent < batteryLifePercent)
+		{
+			gosub ResetHighest
+		}
 	}
+	
+	gosub ResetLast
 	gosub TrayToolTip
 	gosub SetTrayIcon
 	return
@@ -141,6 +144,8 @@ AddOnBatteryTime:
 LogCharge:
 {
 	FileAppend, Charge %LowestBatteryPercent%`% to %batteryLifePercent%`%`n, Log.txt
+	gosub ResetHighest
+	gosub ResetLowest
 	return
 }
 
@@ -148,6 +153,8 @@ LogDischarge:
 {
 	t := GetFormattedTime(OnBatteryTime)
 	FileAppend, Discharge %HighestBatteryPercent%`% to %batteryLifePercent%`% in %t%`n, Log.txt
+	gosub ResetHighest
+	gosub ResetLowest
 	return
 }
 
@@ -240,22 +247,22 @@ SetTrayIcon:
 		Menu, Tray, Icon, %A_ScriptDir%/Icons/empty.ico,,1
 		CurrentIcon := 0
 	}
-	else if (batteryLifePercent > IconPercentage[0] and batteryLifePercent <= IconPercentage[1] and CurrentIcon != 1) ;LESS THAN 30
+	else if (batteryLifePercent > IconPercentage[0] and batteryLifePercent <= IconPercentage[1] and CurrentIcon != 1)
 	{
 		Menu, Tray, Icon, %A_ScriptDir%/Icons/low.ico,,1
 		CurrentIcon := 1
 	}
-	else if (batteryLifePercent > IconPercentage[1] and batteryLifePercent <= IconPercentage[2] and CurrentIcon != 2) ;LESS THAN 60
+	else if (batteryLifePercent > IconPercentage[1] and batteryLifePercent <= IconPercentage[2] and CurrentIcon != 2)
 	{
 		Menu, Tray, Icon, %A_ScriptDir%/Icons/half.ico,,1
 		CurrentIcon := 2
 	}
-	else if (batteryLifePercent > IconPercentage[2] and batteryLifePercent < IconPercentage[3] and CurrentIcon != 3) ;LESS THAN 90
+	else if (batteryLifePercent > IconPercentage[2] and batteryLifePercent < IconPercentage[3] and CurrentIcon != 3)
 	{
 		Menu, Tray, Icon, %A_ScriptDir%/Icons/almost_full.ico,,1
 		CurrentIcon := 3
 	}
-	else if (batteryLifePercent >= IconPercentage[3] and CurrentIcon != 4) ;GREATER THAN 90
+	else if (batteryLifePercent >= IconPercentage[3] and CurrentIcon != 4)
 	{
 		Menu, Tray, Icon, %A_ScriptDir%/Icons/full.ico,,1
 		CurrentIcon := 4
