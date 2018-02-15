@@ -91,6 +91,10 @@ Run:
 			LastACStatus := 0
 			IniWrite,%LastACStatus%,config.ini,Variables,LastACStatus
 			gosub LogCharge
+			if (batteryLifePercent => BatteryPercentResetThreshold)
+			{
+				gosub ResetAll
+			}
 		}
 		
 		gosub AddOnBatteryTime
@@ -106,7 +110,7 @@ Run:
 			else
 			{
 				gosub LogCharge
-				if batteryLifePercent > BatteryPercentResetThreshold
+				if (batteryLifePercent => BatteryPercentResetThreshold)
 				{
 					gosub ResetAll
 				}
@@ -197,7 +201,7 @@ ResetAll:
 	IniWrite,%LowestBatteryPercent%,config.ini,Variables,LowestBatteryPercent
 	IniWrite,%LastBatteryPercent%,config.ini,Variables,LastBatteryPercent
 	IniWrite,%OnBatteryTime%,config.ini,Variables,OnBatteryTime
-	IniWrite,%SessionDischargePercentt%,config.ini,Variables,SessionDischargePercent
+	IniWrite,%SessionDischargePercent%,config.ini,Variables,SessionDischargePercent
 	return
 }
 
@@ -215,15 +219,10 @@ TrayToolTip:
 		Text = %Text% (%SessionDischargePercent%`%)
 		t := GetFormattedTime(OnBatteryTime)
 		Text = %Text%`nDischarge Time : %t%	
-		if OnBatteryTime > 600000
-		{
-			t := FloorDecimal((SessionDischargePercent)/(OnBatteryTime/3600000))
-			Text = %Text%`nAverage Discharge : %t% (`%/h) 
-		}
-		else
-		{
-			Text = %Text%`nAverage Discharge : -.-- (`%/h)
-		}
+
+		t := FloorDecimal((SessionDischargePercent)/(OnBatteryTime/3600000))
+		Text = %Text%`nAverage Discharge : %t% (`%/h) 
+
 		t := GetFormattedTime(batteryLifePercent/(SessionDischargePercent*-1/OnBatteryTime))
 		Text = %Text%`nEstimated Time Remaining : %t%
 	}
