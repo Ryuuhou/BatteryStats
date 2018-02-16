@@ -91,7 +91,7 @@ Run:
 			LastACStatus := 0
 			IniWrite,%LastACStatus%,config.ini,Variables,LastACStatus
 			gosub LogCharge
-			if (batteryLifePercent => BatteryPercentResetThreshold)
+			if (batteryLifePercent >= BatteryPercentResetThreshold)
 			{
 				gosub ResetAll
 			}
@@ -110,7 +110,7 @@ Run:
 			else
 			{
 				gosub LogCharge
-				if (batteryLifePercent => BatteryPercentResetThreshold)
+				if (batteryLifePercent >= BatteryPercentResetThreshold)
 				{
 					gosub ResetAll
 				}
